@@ -19,20 +19,35 @@ namespace CityBee_task.Controllers
         [HttpGet("{Date}")]
         public ForecastModel GetForecast(DateTime date)
         {
-            ServicePointManager.Expect100Continue = true;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-            string json = (new WebClient()).DownloadString("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/Vilnius/"+ date.ToString("yyyy-MM-dd")+"/"+ date.ToString("yyyy-MM-dd")+"?unitGroup=metric&key=HE6VS58WQKPKMAVGLGHNKJ9KC&contentType=json");
+            var result = CacheModel.Get(date.ToString("yyyy-MM-dd"));
+            if (result != null && result as ForecastModel != null)
+            {
+                return result as ForecastModel;
+            }
+            else
+            {
+                string json = (new WebClient()).DownloadString("https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/Vilnius/" + date.ToString("yyyy-MM-dd") + "/" + date.ToString("yyyy-MM-dd") + "?unitGroup=metric&key=HE6VS58WQKPKMAVGLGHNKJ9KC&contentType=json");
 
-            dynamic data = JsonConvert.DeserializeObject<object>(json);
+                dynamic data = JsonConvert.DeserializeObject<object>(json);
 
-
-            return new ForecastModel { 
-            Date = data.days[0].datetime,
-            Temperature = data.days[0].temp,
-            Humidity = data.days[0].humidity,
-            Wind = data.days[0].windspeed,
-            Pressure = data.days[0].pressure,
-            };
+                CacheModel.Add(date.ToString("yyyy-MM-dd"), new ForecastModel
+                {
+                    Date = data.days[0].datetime,
+                    Temperature = data.days[0].temp,
+                    Humidity = data.days[0].humidity,
+                    Wind = data.days[0].windspeed,
+                    Pressure = data.days[0].pressure,
+                });
+                return new ForecastModel
+                {
+                    Date = data.days[0].datetime,
+                    Temperature = data.days[0].temp,
+                    Humidity = data.days[0].humidity,
+                    Wind = data.days[0].windspeed,
+                    Pressure = data.days[0].pressure,
+                };
+            }
+            
         }
     }
 }
