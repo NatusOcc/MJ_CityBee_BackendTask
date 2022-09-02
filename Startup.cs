@@ -25,7 +25,18 @@ namespace CityBee_task
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddResponseCaching();
+
             services.AddControllers();
+
+            services.AddMvc(options =>
+            {
+                options.CacheProfiles.Add("Cache20sec", new CacheProfile
+                {
+                    Duration = 20,
+                    Location = ResponseCacheLocation.Any
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -41,6 +52,8 @@ namespace CityBee_task
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseResponseCaching();
 
             app.UseEndpoints(endpoints =>
             {
